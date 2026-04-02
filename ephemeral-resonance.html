@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ephemeral Resonance — 瞬态共鸣</title>
+
+<!-- Fonts: Cormorant Garamond (display) + Outfit (body) — distinctive, not generic -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Outfit:wght@200;300;400&display=swap" rel="stylesheet">
+
+<style>
+  /* === Design Tokens (frontend-design: CSS variables for consistency) === */
+  :root {
+    --color-void: #0a0a0f;
+    --color-mist: #e8e4df;
+    --color-accent: #c4553a;
+    --color-gold: #c9a96e;
+    --color-teal: #3a8c7c;
+    --color-fade: rgba(232, 228, 223, 0.4);
+    --font-display: 'Cormorant Garamond', Georgia, serif;
+    --font-body: 'Outfit', 'Helvetica Neue', sans-serif;
+  }
+
+  /* === Reset & Base (frontend-design: atmosphere over solid colors) === */
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-gold) var(--color-void);
+  }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--color-void);
+    color: var(--color-mist);
+    overflow-x: hidden;
+    cursor: crosshair;
+  }
+
+  /* === WebGL Canvas (shader-dev: full-viewport shader) === */
+  #shader-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    z-index: 0;
+  }
+
+  /* === Noise Overlay (frontend-design: texture/grain) === */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.5;
+  }
+
+  /* === Content Layer === */
+  .content {
+    position: relative;
+    z-index: 10;
+  }
+
+  /* === Hero Section (frontend-design: bold spatial composition) === */
+  .hero {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 2rem;
+    position: relative;
+  }
+
+  .hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(3rem, 10vw, 9rem);
+    font-weight: 300;
+    letter-spacing: 0.15em;
+    line-height: 0.95;
+    color: var(--color-mist);
+    text-transform: uppercase;
+    animation: fadeSlideUp 2s cubic-bezier(0.16, 1, 0.3, 1) both;
+    mix-blend-mode: difference;
+  }
+
+  .hero-subtitle {
+    font-family: var(--font-display);
+    font-size: clamp(1rem, 2.5vw, 1.6rem);
+    font-weight: 300;
+    font-style: italic;
+    letter-spacing: 0.3em;
+    color: var(--color-gold);
+    margin-top: 1.5rem;
+    animation: fadeSlideUp 2s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
+    opacity: 0;
+  }
+
+  .hero-line {
+    width: 60px;
+    height: 1px;
+    background: var(--color-accent);
+    margin-top: 3rem;
+    animation: expandLine 2s cubic-bezier(0.16, 1, 0.3, 1) 0.8s both;
+    transform-origin: center;
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 3rem;
+    font-family: var(--font-body);
+    font-size: 0.65rem;
+    font-weight: 200;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--color-fade);
+    animation: pulse 3s ease-in-out infinite;
+  }
+
+  /* === Philosophy Section (canvas-design: philosophy-first approach) === */
+  .philosophy {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    position: relative;
+  }
+
+  .philosophy-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 6rem 4rem;
+    background: linear-gradient(135deg, rgba(10,10,15,0.95), rgba(10,10,15,0.8));
+    backdrop-filter: blur(20px);
+  }
+
+  .philosophy-number {
+    font-family: var(--font-display);
+    font-size: 8rem;
+    font-weight: 300;
+    color: rgba(201, 169, 110, 0.08);
+    line-height: 1;
+    margin-bottom: -2rem;
+  }
+
+  .philosophy-heading {
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    font-weight: 300;
+    letter-spacing: 0.08em;
+    margin-bottom: 2rem;
+    color: var(--color-mist);
+  }
+
+  .philosophy-body {
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    font-weight: 200;
+    line-height: 2;
+    color: var(--color-fade);
+    max-width: 480px;
+  }
+
+  .philosophy-body em {
+    color: var(--color-gold);
+    font-style: normal;
+  }
+
+  .philosophy-visual {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10,10,15,0.6);
+  }
+
+  #p5-canvas {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* === Manifesto Section (algorithmic-art: algorithmic philosophy) === */
+  .manifesto {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6rem 2rem;
+    position: relative;
+    background: linear-gradient(to bottom, transparent, rgba(196, 85, 58, 0.03), transparent);
+  }
+
+  .manifesto-inner {
+    max-width: 900px;
+    text-align: center;
+  }
+
+  .manifesto-quote {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 3.5vw, 2.8rem);
+    font-weight: 300;
+    font-style: italic;
+    line-height: 1.6;
+    color: var(--color-mist);
+    position: relative;
+  }
+
+  .manifesto-quote::before {
+    content: '\201C';
+    font-size: 12rem;
+    position: absolute;
+    top: -4rem;
+    left: -4rem;
+    color: rgba(201, 169, 110, 0.08);
+    font-family: var(--font-display);
+    line-height: 1;
+  }
+
+  .manifesto-attribution {
+    font-family: var(--font-body);
+    font-size: 0.7rem;
+    font-weight: 300;
+    letter-spacing: 0.5em;
+    text-transform: uppercase;
+    color: var(--color-gold);
+    margin-top: 3rem;
+  }
+
+  /* === Gallery Section (frontend-design: grid-breaking layout) === */
+  .gallery {
+    min-height: 100vh;
+    padding: 6rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .gallery-label {
+    font-family: var(--font-body);
+    font-size: 0.65rem;
+    font-weight: 300;
+    letter-spacing: 0.6em;
+    text-transform: uppercase;
+    color: var(--color-gold);
+    margin-bottom: 4rem;
+  }
+
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-template-rows: repeat(6, 80px);
+    gap: 1rem;
+    max-width: 1100px;
+    width: 100%;
+  }
+
+  .gallery-item {
+    border: 1px solid rgba(201, 169, 110, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 300;
+    letter-spacing: 0.2em;
+    color: var(--color-fade);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .gallery-item:hover {
+    border-color: var(--color-gold);
+    color: var(--color-mist);
+    transform: scale(1.02);
+  }
+
+  .gallery-item::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent, rgba(201, 169, 110, 0.05));
+    opacity: 0;
+    transition: opacity 0.6s;
+  }
+
+  .gallery-item:hover::before { opacity: 1; }
+
+  .g1 { grid-column: 1 / 6; grid-row: 1 / 4; }
+  .g2 { grid-column: 6 / 9; grid-row: 1 / 3; }
+  .g3 { grid-column: 9 / 13; grid-row: 1 / 4; }
+  .g4 { grid-column: 1 / 4; grid-row: 4 / 7; }
+  .g5 { grid-column: 4 / 8; grid-row: 3 / 7; }
+  .g6 { grid-column: 8 / 13; grid-row: 4 / 7; }
+
+  /* Canvas inside gallery items for generative mini-art */
+  .gallery-item canvas {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* === Footer === */
+  .footer {
+    padding: 4rem 2rem;
+    text-align: center;
+    border-top: 1px solid rgba(201, 169, 110, 0.1);
+  }
+
+  .footer-text {
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    font-weight: 300;
+    letter-spacing: 0.3em;
+    color: var(--color-fade);
+  }
+
+  .footer-year {
+    color: var(--color-gold);
+  }
+
+  /* === Mouse Follower (frontend-design: micro-interaction) === */
+  .cursor-glow {
+    position: fixed;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(196, 85, 58, 0.08), transparent 70%);
+    pointer-events: none;
+    z-index: 5;
+    transform: translate(-50%, -50%);
+    transition: opacity 0.3s;
+  }
+
+  /* === Scroll Reveal (frontend-design: staggered reveals) === */
+  .reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* === Keyframes (frontend-design: high-impact motion) === */
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(60px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes expandLine {
+    from { width: 0; opacity: 0; }
+    to { width: 60px; opacity: 1; }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.8; }
+  }
+
+  /* === Responsive (frontend-design: accessible across sizes) === */
+  @media (max-width: 768px) {
+    .philosophy {
+      grid-template-columns: 1fr;
+    }
+    .philosophy-text {
+      padding: 3rem 2rem;
+    }
+    .philosophy-visual {
+      min-height: 50vh;
+    }
+    .gallery-grid {
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto;
+    }
+    .g1, .g2, .g3, .g4, .g5, .g6 {
+      grid-column: auto;
+      grid-row: auto;
+      min-height: 200px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- Shader Background (shader-dev: WebGL2 full-viewport shader) -->
+<canvas id="shader-canvas"></canvas>
+
+<!-- Mouse Glow (frontend-design: micro-interaction) -->
+<div class="cursor-glow" id="cursor-glow"></div>
+
+<div class="content">
+
+  <!-- Hero (frontend-design: bold typography, intentional direction) -->
+  <section class="hero">
+    <h1 class="hero-title">Ephemeral<br>Resonance</h1>
+    <p class="hero-subtitle">瞬态共鸣 &mdash; where noise becomes beauty</p>
+    <div class="hero-line"></div>
+    <span class="scroll-hint">scroll to explore</span>
+  </section>
+
+  <!-- Philosophy I (canvas-design: philosophy-first creation) -->
+  <section class="philosophy reveal">
+    <div class="philosophy-text">
+      <span class="philosophy-number">01</span>
+      <h2 class="philosophy-heading">The Art of<br>Dissolving Form</h2>
+      <p class="philosophy-body">
+        In the space between <em>signal and noise</em>, a new aesthetic emerges.
+        This is not chaos rendered visible — it is the quiet mathematics of becoming.
+        Every pixel is a probability, every gradient a whisper of intention.
+        We do not design. We <em>tune</em>.
+      </p>
+    </div>
+    <div class="philosophy-visual">
+      <!-- p5.js generative art panel (algorithmic-art: seeded generative system) -->
+      <div id="p5-canvas"></div>
+    </div>
+  </section>
+
+  <!-- Manifesto (algorithmic-art: algorithmic philosophy) -->
+  <section class="manifesto reveal">
+    <div class="manifesto-inner">
+      <blockquote class="manifesto-quote">
+        Beauty is not the absence of noise — it is the precise calibration of disorder,
+        where every perturbation has been shaped by invisible hands
+        into something that feels inevitable.
+      </blockquote>
+      <p class="manifesto-attribution">&mdash; Ephemeral Resonance, 2026</p>
+    </div>
+  </section>
+
+  <!-- Philosophy II -->
+  <section class="philosophy reveal" style="direction: rtl;">
+    <div class="philosophy-text" style="direction: ltr;">
+      <span class="philosophy-number">02</span>
+      <h2 class="philosophy-heading">Digital<br>Poetics</h2>
+      <p class="philosophy-body">
+        The screen is not a canvas — it is a <em>membrane</em>.
+        Light passes through it in ways our ancestors could never have imagined.
+        We compose with photons, with voltages, with the trembling edge
+        between presence and absence. Each frame is a <em>breath</em>.
+      </p>
+    </div>
+    <div class="philosophy-visual" style="direction: ltr;">
+      <canvas id="mini-shader" style="width:100%;height:100%;"></canvas>
+    </div>
+  </section>
+
+  <!-- Gallery (frontend-design: asymmetric grid-breaking layout) -->
+  <section class="gallery reveal">
+    <span class="gallery-label">Studies in Resonance</span>
+    <div class="gallery-grid">
+      <div class="gallery-item g1" id="art-1"><canvas></canvas></div>
+      <div class="gallery-item g2" id="art-2"><canvas></canvas></div>
+      <div class="gallery-item g3" id="art-3"><canvas></canvas></div>
+      <div class="gallery-item g4" id="art-4"><canvas></canvas></div>
+      <div class="gallery-item g5" id="art-5"><canvas></canvas></div>
+      <div class="gallery-item g6" id="art-6"><canvas></canvas></div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p class="footer-text">
+      Ephemeral Resonance &mdash; <span class="footer-year">MMXXVI</span>
+    </p>
+  </footer>
+</div>
+
+<!-- === JavaScript === -->
+
+<!-- p5.js for generative art sections (algorithmic-art) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+
+<script>
+// =====================================================
+// SECTION 1: WebGL2 Shader Background (shader-dev)
+// Domain-warped FBM noise — organic, fluid, alive
+// =====================================================
+(function initShader() {
+  const canvas = document.getElementById('shader-canvas');
+  const gl = canvas.getContext('webgl2', { alpha: false, antialias: false });
+  if (!gl) return;
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    gl.viewport(0, 0, canvas.width, canvas.height);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const vsSource = `#version 300 es
+  in vec2 aPos;
+  void main() { gl_Position = vec4(aPos, 0.0, 1.0); }`;
+
+  // Domain-warped FBM with subtle color shifts (shader-dev: procedural-noise + domain-warping)
+  const fsSource = `#version 300 es
+  precision highp float;
+  uniform float iTime;
+  uniform vec2 iResolution;
+  uniform vec2 iMouse;
+  out vec4 fragColor;
+
+  // Hash function (shader-dev: procedural-noise)
+  float hash(vec2 p) {
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 45.32);
+    return fract(p.x * p.y);
+  }
+
+  // Value noise
+  float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    float a = hash(i);
+    float b = hash(i + vec2(1.0, 0.0));
+    float c = hash(i + vec2(0.0, 1.0));
+    float d = hash(i + vec2(1.0, 1.0));
+    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+  }
+
+  // FBM with 6 octaves (shader-dev: performance budget ≤ 6)
+  float fbm(vec2 p) {
+    float v = 0.0;
+    float a = 0.5;
+    mat2 rot = mat2(0.8, 0.6, -0.6, 0.8);
+    for (int i = 0; i < 6; i++) {
+      v += a * noise(p);
+      p = rot * p * 2.0 + vec2(1.7, 9.2);
+      a *= 0.5;
+    }
+    return v;
+  }
+
+  void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+    vec2 uv = fragCoord / iResolution.xy;
+    vec2 p = (2.0 * fragCoord - iResolution.xy) / iResolution.y;
+
+    // Mouse influence (frontend-design: interactive micro-response)
+    vec2 mouse = (2.0 * iMouse - iResolution.xy) / iResolution.y;
+    float mouseDist = length(p - mouse) * 0.5;
+
+    float t = iTime * 0.15;
+
+    // Domain warping (shader-dev: domain-warping technique)
+    vec2 q = vec2(
+      fbm(p + vec2(0.0, 0.0) + t * 0.3),
+      fbm(p + vec2(5.2, 1.3) + t * 0.2)
+    );
+
+    vec2 r = vec2(
+      fbm(p + 4.0 * q + vec2(1.7, 9.2) + t * 0.15),
+      fbm(p + 4.0 * q + vec2(8.3, 2.8) + t * 0.12)
+    );
+
+    float f = fbm(p + 4.0 * r);
+
+    // Color palette (frontend-design: cohesive, intentional)
+    // Deep void → warm gold → accent → teal
+    vec3 col = mix(
+      vec3(0.039, 0.039, 0.059),  // void
+      vec3(0.788, 0.663, 0.431),  // gold
+      clamp(f * f * 2.0, 0.0, 1.0)
+    );
+
+    col = mix(col,
+      vec3(0.769, 0.333, 0.227),  // accent (warm red)
+      clamp(length(q) * 0.5, 0.0, 1.0)
+    );
+
+    col = mix(col,
+      vec3(0.227, 0.549, 0.486),  // teal
+      clamp(length(r.x), 0.0, 1.0) * 0.3
+    );
+
+    // Mouse warmth
+    col += vec3(0.769, 0.333, 0.227) * 0.04 / (mouseDist + 0.5);
+
+    // Vignette (shader-dev: post-processing)
+    float vig = 1.0 - 0.4 * length(uv - 0.5);
+    col *= vig;
+
+    // Tone mapping (shader-dev: ACES approximation)
+    col = col / (col + vec3(1.0));
+    col = pow(col, vec3(0.9));
+
+    fragColor = vec4(col, 1.0);
+  }
+
+  void main() {
+    mainImage(fragColor, gl_FragCoord.xy);
+  }`;
+
+  function compileShader(type, source) {
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      console.error(gl.getShaderInfoLog(shader));
+      gl.deleteShader(shader);
+      return null;
+    }
+    return shader;
+  }
+
+  const vs = compileShader(gl.VERTEX_SHADER, vsSource);
+  const fs = compileShader(gl.FRAGMENT_SHADER, fsSource);
+  if (!vs || !fs) return;
+
+  const program = gl.createProgram();
+  gl.attachShader(program, vs);
+  gl.attachShader(program, fs);
+  gl.linkProgram(program);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    console.error(gl.getProgramInfoLog(program));
+    return;
+  }
+  gl.useProgram(program);
+
+  // Full-screen quad
+  const quad = new Float32Array([-1,-1, 1,-1, -1,1, 1,1]);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, quad, gl.STATIC_DRAW);
+  const aPos = gl.getAttribLocation(program, 'aPos');
+  gl.enableVertexAttribArray(aPos);
+  gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+  const uTime = gl.getUniformLocation(program, 'iTime');
+  const uRes = gl.getUniformLocation(program, 'iResolution');
+  const uMouse = gl.getUniformLocation(program, 'iMouse');
+
+  let mouseX = window.innerWidth / 2;
+  let mouseY = window.innerHeight / 2;
+  document.addEventListener('mousemove', e => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+  });
+
+  const startTime = performance.now();
+  function render() {
+    gl.uniform1f(uTime, (performance.now() - startTime) / 1000);
+    gl.uniform2f(uRes, canvas.width, canvas.height);
+    gl.uniform2f(uMouse, mouseX, canvas.height - mouseY);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(render);
+  }
+  render();
+})();
+
+// =====================================================
+// SECTION 2: p5.js Generative Art (algorithmic-art)
+// Flow-field particles with seeded randomness
+// =====================================================
+(function initP5() {
+  const container = document.getElementById('p5-canvas');
+  if (!container) return;
+
+  const sketch = new p5((p) => {
+    const SEED = 42; // algorithmic-art: seeded randomness
+    let particles = [];
+    const NUM = 600;
+    let flowField;
+    const SCALE = 20;
+    let cols, rows;
+
+    p.setup = function() {
+      const w = container.offsetWidth;
+      const h = container.offsetHeight;
+      const c = p.createCanvas(w, h);
+      c.parent(container);
+      p.randomSeed(SEED);
+      p.noiseSeed(SEED);
+      p.background(10, 10, 15, 0);
+      cols = Math.ceil(w / SCALE);
+      rows = Math.ceil(h / SCALE);
+      flowField = new Array(cols * rows);
+
+      // Initialize particles (algorithmic-art: parametric system)
+      for (let i = 0; i < NUM; i++) {
+        particles.push({
+          pos: p.createVector(p.random(w), p.random(h)),
+          vel: p.createVector(0, 0),
+          acc: p.createVector(0, 0),
+          maxSpeed: p.random(1, 3),
+          prev: p.createVector(0, 0),
+          life: p.random(100, 400),
+          age: 0
+        });
+      }
+    };
+
+    p.draw = function() {
+      p.background(10, 10, 15, 8); // Slow fade for trails
+
+      // Compute flow field (algorithmic-art: Perlin noise-driven)
+      const t = p.frameCount * 0.003;
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          const idx = x + y * cols;
+          const angle = p.noise(x * 0.05, y * 0.05, t) * p.TWO_PI * 2;
+          const v = p5.Vector.fromAngle(angle);
+          v.setMag(0.5);
+          flowField[idx] = v;
+        }
+      }
+
+      // Update & draw particles (algorithmic-art: particle behaviors)
+      for (let pt of particles) {
+        pt.prev.set(pt.pos);
+        const x = Math.floor(pt.pos.x / SCALE);
+        const y = Math.floor(pt.pos.y / SCALE);
+        const idx = x + y * cols;
+        if (flowField[idx]) {
+          pt.acc.add(flowField[idx]);
+        }
+        pt.vel.add(pt.acc);
+        pt.vel.limit(pt.maxSpeed);
+        pt.pos.add(pt.vel);
+        pt.acc.mult(0);
+        pt.age++;
+
+        // Color from velocity (algorithmic-art: color emerges from behavior)
+        const speed = pt.vel.mag();
+        const hue = p.map(speed, 0, pt.maxSpeed, 30, 50); // Gold range
+        const sat = p.map(speed, 0, pt.maxSpeed, 30, 80);
+        const bri = p.map(speed, 0, pt.maxSpeed, 20, 70);
+        const alpha = p.map(pt.age, 0, pt.life, 40, 5);
+
+        p.stroke(p.color(`hsla(${hue}, ${sat}%, ${bri}%, ${alpha / 100})`));
+        p.strokeWeight(p.map(speed, 0, pt.maxSpeed, 0.5, 1.5));
+        p.line(pt.prev.x, pt.prev.y, pt.pos.x, pt.pos.y);
+
+        // Wrap around edges
+        if (pt.pos.x > p.width) pt.pos.x = 0;
+        if (pt.pos.x < 0) pt.pos.x = p.width;
+        if (pt.pos.y > p.height) pt.pos.y = 0;
+        if (pt.pos.y < 0) pt.pos.y = p.height;
+
+        // Respawn when life ends
+        if (pt.age > pt.life) {
+          pt.pos.set(p.random(p.width), p.random(p.height));
+          pt.vel.set(0, 0);
+          pt.age = 0;
+          pt.life = p.random(100, 400);
+        }
+      }
+    };
+
+    p.windowResized = function() {
+      p.resizeCanvas(container.offsetWidth, container.offsetHeight);
+    };
+  });
+})();
+
+// =====================================================
+// SECTION 3: Mini Shader in Philosophy II (shader-dev)
+// =====================================================
+(function initMiniShader() {
+  const canvas = document.getElementById('mini-shader');
+  if (!canvas) return;
+  const gl = canvas.getContext('webgl2', { alpha: false });
+  if (!gl) return;
+
+  function resize() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+    gl.viewport(0, 0, canvas.width, canvas.height);
+  }
+
+  // Observe for visibility to resize properly
+  const observer = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) resize();
+  }, { threshold: 0.1 });
+  observer.observe(canvas.parentElement);
+  window.addEventListener('resize', resize);
+
+  const vsSource = `#version 300 es
+  in vec2 aPos;
+  void main() { gl_Position = vec4(aPos, 0.0, 1.0); }`;
+
+  // Fractal Julia set with animated seed (shader-dev: fractal-rendering)
+  const fsSource = `#version 300 es
+  precision highp float;
+  uniform float iTime;
+  uniform vec2 iResolution;
+  out vec4 fragColor;
+
+  void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+    vec2 uv = (2.0 * fragCoord - iResolution.xy) / iResolution.y;
+    vec2 c = vec2(
+      -0.7 + 0.15 * sin(iTime * 0.1),
+      0.27015 + 0.1 * cos(iTime * 0.13)
+    );
+    vec2 z = uv * 1.5;
+    float iter = 0.0;
+
+    for (int i = 0; i < 80; i++) {
+      z = vec2(z.x*z.x - z.y*z.y, 2.0*z.x*z.y) + c;
+      if (dot(z, z) > 4.0) break;
+      iter += 1.0;
+    }
+
+    float f = iter / 80.0;
+    // Warm palette (frontend-design: cohesive color)
+    vec3 col = mix(
+      vec3(0.039, 0.039, 0.059),
+      vec3(0.788, 0.663, 0.431),
+      f
+    );
+    col = mix(col, vec3(0.769, 0.333, 0.227), f * f);
+    col *= 1.0 - f * 0.3;
+
+    fragColor = vec4(col, 1.0);
+  }
+
+  void main() {
+    mainImage(fragColor, gl_FragCoord.xy);
+  }`;
+
+  function compileShader(type, source) {
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) return null;
+    return shader;
+  }
+
+  const vs = compileShader(gl.VERTEX_SHADER, vsSource);
+  const fs = compileShader(gl.FRAGMENT_SHADER, fsSource);
+  if (!vs || !fs) return;
+
+  const program = gl.createProgram();
+  gl.attachShader(program, vs);
+  gl.attachShader(program, fs);
+  gl.linkProgram(program);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return;
+  gl.useProgram(program);
+
+  const quad = new Float32Array([-1,-1, 1,-1, -1,1, 1,1]);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, quad, gl.STATIC_DRAW);
+  const aPos = gl.getAttribLocation(program, 'aPos');
+  gl.enableVertexAttribArray(aPos);
+  gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+  const uTime = gl.getUniformLocation(program, 'iTime');
+  const uRes = gl.getUniformLocation(program, 'iResolution');
+
+  let animId;
+  const startTime = performance.now();
+  function render() {
+    if (canvas.offsetWidth === 0) { animId = requestAnimationFrame(render); return; }
+    resize();
+    gl.uniform1f(uTime, (performance.now() - startTime) / 1000);
+    gl.uniform2f(uRes, canvas.width, canvas.height);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    animId = requestAnimationFrame(render);
+  }
+  render();
+})();
+
+// =====================================================
+// SECTION 4: Gallery Mini-Art (algorithmic-art: generative)
+// Each gallery item has its own tiny generative canvas
+// =====================================================
+(function initGallery() {
+  const items = document.querySelectorAll('.gallery-item');
+
+  // Different generative algorithms per cell (algorithmic-art)
+  const algorithms = [
+    // 1: Concentric ripples
+    (ctx, w, h, t) => {
+      ctx.fillStyle = 'rgba(10,10,15,1)';
+      ctx.fillRect(0, 0, w, h);
+      const cx = w/2, cy = h/2;
+      for (let r = 0; r < 30; r++) {
+        const radius = r * 8 + Math.sin(t * 0.5 + r * 0.3) * 10;
+        ctx.beginPath();
+        ctx.arc(cx, cy, Math.max(1, radius), 0, Math.PI * 2);
+        ctx.strokeStyle = `hsla(${35 + r * 2}, 60%, ${30 + r}%, ${0.15 + Math.sin(t + r) * 0.1})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+    },
+    // 2: Walking lines
+    (ctx, w, h, t) => {
+      ctx.fillStyle = 'rgba(10,10,15,1)';
+      ctx.fillRect(0, 0, w, h);
+      for (let i = 0; i < 12; i++) {
+        ctx.beginPath();
+        ctx.moveTo(0, h/2);
+        for (let x = 0; x <= w; x += 5) {
+          const y = h/2 + Math.sin(x * 0.02 + t * 0.3 + i * 0.5) * (30 + i * 5) * Math.cos(x * 0.005 + t * 0.1);
+          ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = `hsla(15, 70%, ${40 + i * 2}%, 0.3)`;
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+      }
+    },
+    // 3: Dot grid breathing
+    (ctx, w, h, t) => {
+      ctx.fillStyle = 'rgba(10,10,15,1)';
+      ctx.fillRect(0, 0, w, h);
+      const step = 15;
+      for (let x = step; x < w; x += step) {
+        for (let y = step; y < h; y += step) {
+          const dist = Math.sqrt((x-w/2)**2 + (y-h/2)**2);
+          const size = 1 + Math.sin(dist * 0.05 - t * 0.8) * 1.5;
+          const alpha = 0.2 + Math.sin(dist * 0.03 - t * 0.5) * 0.15;
+          ctx.fillStyle = `hsla(170, 50%, 50%, ${alpha})`;
+          ctx.beginPath();
+          ctx.arc(x, y, Math.max(0.5, size), 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    },
+    // 4: Flowing curves
+    (ctx, w, h, t) => {
+      ctx.fillStyle = 'rgba(10,10,15,1)';
+      ctx.fillRect(0, 0, w, h);
+      for (let i = 0; i < 8; i++) {
+        ctx.beginPath();
+        for (let x = 0; x <= w; x += 2) {
+          const n = Math.sin(x * 0.01 + i * 1.2 + t * 0.2) * Math.cos(x * 0.008 - t * 0.15);
+          const y = h * (i + 1) / 9 + n * 40;
+          x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = `hsla(${40 + i * 5}, 50%, 55%, 0.25)`;
+        ctx.lineWidth = 0.7;
+        ctx.stroke();
+      }
+    },
+    // 5: Rotating hexagonal pattern
+    (ctx, w, h, t) => {
+      ctx.fillStyle = 'rgba(10,10,15,1)';
+      ctx.fillRect(0, 0, w, h);
+      const cx = w/2, cy = h/2;
+      const sides = 6;
+      for (let ring = 0; ring < 5; ring++) {
+        for (let s = 0; s < sides; s++) {
+          const angle = (Math.PI * 2 / sides) * s + t * 0.2 * (ring % 2 === 0 ? 1 : -1);
+          const r = 20 + ring * 25;
+          const x = cx + Math.cos(angle) * r;
+          const y = cy + Math.sin(angle) * r;
+          ctx.beginPath();
+          for (let v = 0; v < sides; v++) {
+            const a = (Math.PI * 2 / sides) * v + t * 0.3;
+            const px = x + Math.cos(a) * (8 + ring * 2);
+            const py = y + Math.sin(a) * (8 + ring * 2);
+            v === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+          }
+          ctx.closePath();
+          ctx.strokeStyle = `hsla(${20 + ring * 10}, 60%, ${45 + ring * 3}%, 0.35)`;
+          ctx.lineWidth = 0.6;
+          ctx.stroke();
+        }
+      }
+    },
+    // 6: Particle rain
+    (ctx, w, h, t) => {
+      ctx.fillStyle = 'rgba(10,10,15,0.15)';
+      ctx.fillRect(0, 0, w, h);
+      for (let i = 0; i < 40; i++) {
+        const seed = i * 137.5;
+        const x = (seed * 7.3) % w;
+        const y = ((seed * 3.7 + t * 50 * (1 + (i % 3) * 0.5)) % (h + 20)) - 10;
+        const len = 5 + (i % 5) * 3;
+        const alpha = 0.1 + (i % 4) * 0.05;
+        ctx.strokeStyle = `hsla(${35 + i % 20}, 50%, 60%, ${alpha})`;
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + 1, y + len);
+        ctx.stroke();
+      }
+    }
+  ];
+
+  items.forEach((item, idx) => {
+    const c = item.querySelector('canvas');
+    if (!c) return;
+    const ctx = c.getContext('2d');
+    const algo = algorithms[idx % algorithms.length];
+    let visible = false;
+
+    const obs = new IntersectionObserver((entries) => {
+      visible = entries[0].isIntersecting;
+    }, { threshold: 0.1 });
+    obs.observe(item);
+
+    function animate() {
+      if (visible) {
+        const rect = item.getBoundingClientRect();
+        if (c.width !== rect.width || c.height !== rect.height) {
+          c.width = rect.width;
+          c.height = rect.height;
+        }
+        algo(ctx, c.width, c.height, performance.now() / 1000);
+      }
+      requestAnimationFrame(animate);
+    }
+    animate();
+  });
+})();
+
+// =====================================================
+// SECTION 5: Mouse Follower (frontend-design: interaction)
+// =====================================================
+(function initCursor() {
+  const glow = document.getElementById('cursor-glow');
+  let mx = 0, my = 0, cx = 0, cy = 0;
+
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX;
+    my = e.clientY;
+  });
+
+  function update() {
+    cx += (mx - cx) * 0.08;
+    cy += (my - cy) * 0.08;
+    glow.style.left = cx + 'px';
+    glow.style.top = cy + 'px';
+    requestAnimationFrame(update);
+  }
+  update();
+})();
+
+// =====================================================
+// SECTION 6: Scroll Reveal (frontend-design: staggered)
+// =====================================================
+(function initReveal() {
+  const reveals = document.querySelectorAll('.reveal');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.15 });
+
+  reveals.forEach(el => obs.observe(el));
+})();
+</script>
+</body>
+</html>
