@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<!--
+    THIS IS A TEMPLATE THAT SHOULD BE USED EVERY TIME AND MODIFIED.
+    WHAT TO KEEP:
+    ✓ Overall structure (header, sidebar, main content)
+    ✓ Anthropic branding (colors, fonts, layout)
+    ✓ Seed navigation section (always include this)
+    ✓ Self-contained artifact (everything inline)
+
+    WHAT TO CREATIVELY EDIT:
+    ✗ The p5.js algorithm (implement YOUR vision)
+    ✗ The parameters (define what YOUR art needs)
+    ✗ The UI controls (match YOUR parameters)
+
+    Let your philosophy guide the implementation.
+    The world is your oyster - be creative!
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lucent Drift</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --anthropic-dark: #141413;
+            --anthropic-light: #faf9f5;
+            --anthropic-mid-gray: #b0aea5;
+            --anthropic-light-gray: #e8e6dc;
+            --anthropic-orange: #d97757;
+            --anthropic-blue: #6a9bcc;
+            --anthropic-green: #788c5d;
+            --mist-1: rgba(255,255,255,0.52);
+            --mist-2: rgba(248,245,239,0.32);
+            --shadow-soft: 0 18px 44px rgba(20,20,19,0.12);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background:
+                radial-gradient(circle at 18% 15%, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 28%),
+                radial-gradient(circle at 78% 10%, rgba(106,155,204,0.12) 0%, rgba(106,155,204,0) 30%),
+                linear-gradient(135deg, var(--anthropic-light) 0%, #f5f3ee 100%);
+            min-height: 100vh;
+            color: var(--anthropic-dark);
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.18;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px);
+            background-size: 32px 32px;
+            mask-image: radial-gradient(circle at center, black 40%, transparent 92%);
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        .sidebar {
+            width: 320px;
+            flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(20, 20, 19, 0.1);
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: relative;
+            z-index: 2;
+        }
+
+        .sidebar h1 {
+            font-family: 'Lora', serif;
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--anthropic-dark);
+            margin-bottom: 10px;
+            letter-spacing: -0.02em;
+        }
+
+        .sidebar .subtitle {
+            color: var(--anthropic-mid-gray);
+            font-size: 14px;
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+
+        .control-section {
+            margin-bottom: 32px;
+        }
+
+        .control-section h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--anthropic-dark);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-section h3::before {
+            content: '•';
+            color: var(--anthropic-orange);
+            font-weight: bold;
+        }
+
+        .seed-input {
+            width: 100%;
+            background: var(--anthropic-light);
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin-bottom: 12px;
+            border: 1px solid var(--anthropic-light-gray);
+            text-align: center;
+        }
+
+        .seed-input:focus {
+            outline: none;
+            border-color: var(--anthropic-orange);
+            box-shadow: 0 0 0 2px rgba(217, 119, 87, 0.1);
+            background: white;
+        }
+
+        .seed-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .regen-button {
+            margin-bottom: 0;
+        }
+
+        .seed-note {
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--anthropic-mid-gray);
+            line-height: 1.45;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group label {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--anthropic-dark);
+            margin-bottom: 8px;
+        }
+
+        .control-copy {
+            font-size: 12px;
+            color: var(--anthropic-mid-gray);
+            line-height: 1.5;
+            margin-top: -4px;
+            margin-bottom: 8px;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .slider-container input[type="range"] {
+            flex: 1;
+            height: 4px;
+            background: var(--anthropic-light-gray);
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--anthropic-orange);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .slider-container input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            background: #c86641;
+        }
+
+        .slider-container input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: var(--anthropic-orange);
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .value-display {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: var(--anthropic-mid-gray);
+            min-width: 58px;
+            text-align: right;
+        }
+
+        .color-group {
+            margin-bottom: 16px;
+        }
+
+        .color-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--anthropic-mid-gray);
+            margin-bottom: 4px;
+        }
+
+        .color-picker-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .color-picker-container input[type="color"] {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: none;
+            padding: 0;
+        }
+
+        .color-value {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: var(--anthropic-mid-gray);
+        }
+
+        .button {
+            background: var(--anthropic-orange);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        .button:hover {
+            background: #c86641;
+            transform: translateY(-1px);
+        }
+
+        .button:active {
+            transform: translateY(0);
+        }
+
+        .button.secondary {
+            background: var(--anthropic-blue);
+        }
+
+        .button.secondary:hover {
+            background: #5a8bb8;
+        }
+
+        .button.tertiary {
+            background: var(--anthropic-green);
+        }
+
+        .button.tertiary:hover {
+            background: #6b7b52;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .button-row .button {
+            flex: 1;
+        }
+
+        .canvas-area {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+            position: relative;
+        }
+
+        .stage {
+            width: 100%;
+            max-width: 1120px;
+            min-height: 820px;
+            position: relative;
+            border-radius: 26px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(20, 20, 19, 0.1);
+            background:
+                linear-gradient(145deg, rgba(255,255,255,0.58), rgba(255,255,255,0.16)),
+                radial-gradient(circle at 20% 25%, rgba(255,255,255,0.6), transparent 28%),
+                radial-gradient(circle at 80% 18%, rgba(106,155,204,0.2), transparent 22%),
+                #f6f3ee;
+            border: 1px solid rgba(255,255,255,0.7);
+        }
+
+        #canvas-container {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+        }
+
+        #canvas-container canvas {
+            display: block;
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: var(--anthropic-mid-gray);
+            height: 100%;
+        }
+
+        .stage::before,
+        .stage::after {
+            content: '';
+            position: absolute;
+            inset: auto;
+            border-radius: 999px;
+            filter: blur(30px);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .stage::before {
+            width: 280px;
+            height: 280px;
+            left: -60px;
+            top: 90px;
+            background: rgba(255,255,255,0.52);
+            animation: floatGlow 11s ease-in-out infinite alternate;
+        }
+
+        .stage::after {
+            width: 360px;
+            height: 360px;
+            right: -80px;
+            bottom: -20px;
+            background: rgba(106,155,204,0.16);
+            animation: floatGlow 14s ease-in-out infinite alternate-reverse;
+        }
+
+        .stage-overlay {
+            position: relative;
+            z-index: 2;
+            display: grid;
+            grid-template-columns: 1.35fr 0.85fr;
+            min-height: 820px;
+            padding: 56px;
+            gap: 28px;
+            pointer-events: none;
+        }
+
+        .hero-copy {
+            align-self: start;
+            max-width: 620px;
+            padding-top: 10px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.46);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.62);
+            color: rgba(20,20,19,0.68);
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            font-size: 11px;
+            margin-bottom: 22px;
+            box-shadow: var(--shadow-soft);
+            animation: riseIn 1s ease 0.15s both;
+        }
+
+        .hero-copy h2 {
+            font-family: 'Lora', serif;
+            font-size: clamp(3.4rem, 6vw, 5.8rem);
+            font-weight: 600;
+            line-height: 0.95;
+            letter-spacing: -0.045em;
+            margin-bottom: 20px;
+            max-width: 6.5ch;
+            animation: riseIn 1s ease 0.3s both;
+        }
+
+        .hero-copy p {
+            max-width: 450px;
+            font-size: 15px;
+            line-height: 1.72;
+            color: rgba(20,20,19,0.68);
+            animation: riseIn 1s ease 0.45s both;
+        }
+
+        .floating-column {
+            position: relative;
+        }
+
+        .glass-card {
+            pointer-events: auto;
+            position: absolute;
+            max-width: 320px;
+            padding: 22px 22px 20px;
+            border-radius: 24px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.62), rgba(255,255,255,0.28));
+            backdrop-filter: blur(18px);
+            border: 1px solid rgba(255,255,255,0.7);
+            box-shadow: var(--shadow-soft);
+            overflow: hidden;
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.34), rgba(255,255,255,0));
+            pointer-events: none;
+        }
+
+        .glass-card .index {
+            display: inline-block;
+            font-size: 11px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: rgba(20,20,19,0.5);
+            margin-bottom: 12px;
+        }
+
+        .glass-card h3 {
+            font-family: 'Lora', serif;
+            font-size: 24px;
+            margin-bottom: 10px;
+            line-height: 1.05;
+            position: relative;
+        }
+
+        .glass-card p {
+            position: relative;
+            font-size: 13px;
+            line-height: 1.7;
+            color: rgba(20,20,19,0.7);
+        }
+
+        .card-a {
+            top: 28px;
+            right: 8px;
+            transform: rotate(-5deg);
+            animation: floatCard 9s ease-in-out infinite;
+        }
+
+        .card-b {
+            top: 290px;
+            left: -12px;
+            transform: rotate(4deg);
+            animation: floatCard 10.5s ease-in-out infinite reverse;
+        }
+
+        .card-c {
+            bottom: 44px;
+            right: 32px;
+            transform: rotate(-3deg);
+            animation: floatCard 8.7s ease-in-out infinite;
+        }
+
+        .index-strip {
+            pointer-events: auto;
+            position: absolute;
+            left: 56px;
+            right: 56px;
+            bottom: 34px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            animation: riseIn 1s ease 0.6s both;
+        }
+
+        .index-pill {
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.42);
+            border: 1px solid rgba(255,255,255,0.66);
+            backdrop-filter: blur(12px);
+            font-size: 11px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: rgba(20,20,19,0.62);
+            box-shadow: 0 8px 18px rgba(20,20,19,0.06);
+        }
+
+        @keyframes floatGlow {
+            from { transform: translate3d(0, 0, 0) scale(1); }
+            to { transform: translate3d(24px, -16px, 0) scale(1.08); }
+        }
+
+        @keyframes floatCard {
+            0%, 100% { transform: translateY(0) rotate(var(--tilt, 0deg)); }
+            50% { transform: translateY(-14px) rotate(calc(var(--tilt, 0deg) + 1.6deg)); }
+        }
+
+        .card-a { --tilt: -5deg; }
+        .card-b { --tilt: 4deg; }
+        .card-c { --tilt: -3deg; }
+
+        @keyframes riseIn {
+            from {
+                opacity: 0;
+                transform: translateY(24px);
+                filter: blur(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+                filter: blur(0);
+            }
+        }
+
+        @media (max-width: 1100px) {
+            .stage-overlay {
+                grid-template-columns: 1fr;
+                min-height: 900px;
+            }
+
+            .hero-copy {
+                max-width: 100%;
+                padding-right: 120px;
+            }
+
+            .floating-column {
+                min-height: 420px;
+            }
+
+            .card-b {
+                left: 80px;
+            }
+        }
+
+        @media (max-width: 760px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+
+            .canvas-area {
+                padding: 0;
+            }
+
+            .stage {
+                min-height: 880px;
+            }
+
+            .stage-overlay {
+                padding: 28px;
+                min-height: 880px;
+            }
+
+            .hero-copy {
+                padding-right: 0;
+            }
+
+            .hero-copy h2 {
+                max-width: 9ch;
+            }
+
+            .floating-column {
+                min-height: 460px;
+            }
+
+            .glass-card {
+                max-width: 78%;
+            }
+
+            .card-a { top: 8px; right: 0; }
+            .card-b { top: 194px; left: 10px; }
+            .card-c { bottom: 16px; right: 14px; }
+
+            .index-strip {
+                left: 28px;
+                right: 28px;
+                bottom: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h1>Lucent Drift</h1>
+            <div class="subtitle">A dreamlike flowing webpage built as a small digital exhibition. Adjust the atmosphere, drift through seeds, and let the page behave like a soft moving poster.</div>
+
+            <div class="control-section">
+                <h3>Seed</h3>
+                <input type="number" id="seed-input" class="seed-input" value="12345" onchange="updateSeed()">
+                <div class="seed-controls">
+                    <button class="button secondary" onclick="previousSeed()">← Prev</button>
+                    <button class="button secondary" onclick="nextSeed()">Next →</button>
+                </div>
+                <button class="button tertiary regen-button" onclick="randomSeedAndUpdate()">↻ Random</button>
+                <div class="seed-note">Each seed preserves the same visual language while shifting the current, density, and glowing atmosphere.</div>
+            </div>
+
+            <div class="control-section">
+                <h3>Parameters</h3>
+
+                <div class="control-group">
+                    <label><span>Density</span><span class="value-display" id="density-value">1600</span></label>
+                    <div class="control-copy">How many drifting traces are woven into the atmosphere.</div>
+                    <div class="slider-container">
+                        <input type="range" id="density" min="600" max="3200" step="100" value="1600" oninput="updateParam('density', this.value)">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label><span>Drift</span><span class="value-display" id="drift-value">0.72</span></label>
+                    <div class="control-copy">Controls how quickly each line bends into the flow field.</div>
+                    <div class="slider-container">
+                        <input type="range" id="drift" min="0.20" max="1.60" step="0.01" value="0.72" oninput="updateParam('drift', this.value)">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label><span>Bloom</span><span class="value-display" id="bloom-value">0.58</span></label>
+                    <div class="control-copy">Adds more luminous overlap and soft radiant edges.</div>
+                    <div class="slider-container">
+                        <input type="range" id="bloom" min="0.10" max="1.00" step="0.01" value="0.58" oninput="updateParam('bloom', this.value)">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label><span>Haze</span><span class="value-display" id="haze-value">18</span></label>
+                    <div class="control-copy">Changes how slowly the previous trails dissolve into mist.</div>
+                    <div class="slider-container">
+                        <input type="range" id="haze" min="4" max="36" step="1" value="18" oninput="updateParam('haze', this.value)">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label><span>Contrast</span><span class="value-display" id="contrast-value">0.66</span></label>
+                    <div class="control-copy">Balances the whisper-light strokes against deeper ribbons.</div>
+                    <div class="slider-container">
+                        <input type="range" id="contrast" min="0.20" max="1.00" step="0.01" value="0.66" oninput="updateParam('contrast', this.value)">
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <h3>Colors</h3>
+                <div class="color-group">
+                    <label>Morning Mist</label>
+                    <div class="color-picker-container">
+                        <input type="color" id="color1" value="#f4ece6" onchange="updateColor('color1', this.value)">
+                        <span class="color-value" id="color1-value">#f4ece6</span>
+                    </div>
+                </div>
+
+                <div class="color-group">
+                    <label>Deep Tide</label>
+                    <div class="color-picker-container">
+                        <input type="color" id="color2" value="#709ac8" onchange="updateColor('color2', this.value)">
+                        <span class="color-value" id="color2-value">#709ac8</span>
+                    </div>
+                </div>
+
+                <div class="color-group">
+                    <label>Lucent Ember</label>
+                    <div class="color-picker-container">
+                        <input type="color" id="color3" value="#d88e74" onchange="updateColor('color3', this.value)">
+                        <span class="color-value" id="color3-value">#d88e74</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <h3>Actions</h3>
+                <button class="button" onclick="regenerateArtwork()">Regenerate</button>
+                <div class="button-row">
+                    <button class="button secondary" onclick="resetParameters()">Reset</button>
+                    <button class="button tertiary" onclick="downloadPNG()">Download PNG</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="canvas-area">
+            <div class="stage">
+                <div id="canvas-container">
+                    <div class="loading">Initializing generative art...</div>
+                </div>
+
+                <div class="stage-overlay">
+                    <div class="hero-copy">
+                        <div class="eyebrow">Digital Exhibition / Flow Study</div>
+                        <h2>Where color learns to drift.</h2>
+                        <p>
+                            A soft exhibition page built from glow, motion, and seeded turbulence. The composition behaves like a suspended atmosphere: part poster, part gallery wall, part living current. Each seed retunes the mood without losing the same quiet visual language.
+                        </p>
+                    </div>
+
+                    <div class="floating-column">
+                        <div class="glass-card card-a">
+                            <span class="index">Study 01</span>
+                            <h3>Suspended Bloom</h3>
+                            <p>Light is not painted here. It accumulates. Trails overlap until the page feels less rendered than remembered.</p>
+                        </div>
+
+                        <div class="glass-card card-b">
+                            <span class="index">Study 02</span>
+                            <h3>Current Archive</h3>
+                            <p>Density and haze let the surface oscillate between near-fog abstraction and ribbon-like structure.</p>
+                        </div>
+
+                        <div class="glass-card card-c">
+                            <span class="index">Study 03</span>
+                            <h3>Seeded Silence</h3>
+                            <p>Every variation is reproducible. Change the seed, and the page becomes a new room in the same exhibition.</p>
+                        </div>
+                    </div>
+
+                    <div class="index-strip">
+                        <div class="index-pill">No. 01 Lucent Drift</div>
+                        <div class="index-pill">Flowfield Atmosphere</div>
+                        <div class="index-pill">Generative Poster Page</div>
+                        <div class="index-pill">Dreamlike Motion</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let params = {
+            seed: 12345,
+            density: 1600,
+            drift: 0.72,
+            bloom: 0.58,
+            haze: 18,
+            contrast: 0.66,
+            colorPalette: ['#f4ece6', '#709ac8', '#d88e74']
+        };
+
+        let defaultParams = { ...params };
+        let particles = [];
+        let fieldTime = 0;
+        let canvasReady = false;
+
+        function setup() {
+            const container = document.getElementById('canvas-container');
+            const stage = container.parentElement;
+            const size = getCanvasSize(stage);
+            let canvas = createCanvas(size.width, size.height);
+            canvas.parent('canvas-container');
+            pixelDensity(Math.min(window.devicePixelRatio || 1, 2));
+            initializeSystem(true);
+            const loading = document.querySelector('.loading');
+            if (loading) loading.style.display = 'none';
+            canvasReady = true;
+        }
+
+        function getCanvasSize(stage) {
+            const rect = stage.getBoundingClientRect();
+            return {
+                width: Math.max(720, Math.floor(rect.width)),
+                height: Math.max(820, Math.floor(rect.height))
+            };
+        }
+
+        function initializeSystem(clearFrame = true) {
+            randomSeed(params.seed);
+            noiseSeed(params.seed);
+            particles = [];
+            fieldTime = params.seed * 0.00073;
+
+            for (let i = 0; i < params.density; i++) {
+                particles.push(new DriftParticle(i));
+            }
+
+            if (clearFrame) {
+                clear();
+                paintBackdrop(true);
+            }
+        }
+
+        function paintBackdrop(initial = false) {
+            const c1 = color(params.colorPalette[0]);
+            const c2 = color(params.colorPalette[1]);
+            const c3 = color(params.colorPalette[2]);
+            const alpha = initial ? 255 : params.haze;
+
+            noStroke();
+            for (let i = 0; i < 6; i++) {
+                const t = i / 5;
+                const mixed = lerpColor(lerpColor(c1, c2, t * 0.7), c3, t * 0.45);
+                fill(red(mixed), green(mixed), blue(mixed), alpha * 0.12);
+                rect(0, (height / 6) * i, width, height / 6 + 2);
+            }
+
+            fill(255, 255, 255, initial ? 110 : alpha * 0.15);
+            ellipse(width * 0.2, height * 0.18, width * 0.34, width * 0.34);
+            fill(red(c2), green(c2), blue(c2), initial ? 42 : alpha * 0.08);
+            ellipse(width * 0.83, height * 0.22, width * 0.28, width * 0.28);
+            fill(red(c3), green(c3), blue(c3), initial ? 34 : alpha * 0.06);
+            ellipse(width * 0.72, height * 0.74, width * 0.36, width * 0.36);
+        }
+
+        function draw() {
+            paintBackdrop(false);
+            blendMode(BLEND);
+
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].step();
+                particles[i].render();
+            }
+
+            fieldTime += 0.0025 * params.drift;
+        }
+
+        function computeAngle(x, y) {
+            const nx = x / width;
+            const ny = y / height;
+            const n = noise(nx * 2.2 + fieldTime, ny * 2.2 + fieldTime, fieldTime * 0.65);
+            const ribbon = sin((nx * 4.6 + ny * 1.8 + fieldTime * 1.3) * PI);
+            const vortex = atan2(y - height * 0.48, x - width * 0.52);
+            return n * TWO_PI * 2.0 + ribbon * 0.95 + vortex * 0.18;
+        }
+
+        function spectralColor(x, y, age) {
+            const c1 = color(params.colorPalette[0]);
+            const c2 = color(params.colorPalette[1]);
+            const c3 = color(params.colorPalette[2]);
+            const spatial = constrain((x / width) * 0.58 + (1 - y / height) * 0.42, 0, 1);
+            const wave = 0.5 + 0.5 * sin(age * 0.032 + spatial * PI * 2.2 + params.seed * 0.001);
+            return lerpColor(lerpColor(c1, c2, spatial), c3, wave * params.contrast);
+        }
+
+        class DriftParticle {
+            constructor(index) {
+                this.index = index;
+                this.reset(true);
+            }
+
+            reset(initial = false) {
+                this.x = random(width);
+                this.y = random(height);
+                this.px = this.x;
+                this.py = this.y;
+                this.life = random(120, 280);
+                this.maxLife = this.life;
+                this.size = random(0.4, 1.6 + params.bloom * 1.8);
+                this.speed = random(0.25, 1.1) * params.drift;
+                this.wobble = random(0.002, 0.012);
+                this.phase = random(TWO_PI);
+                this.opacity = random(16, 40) + params.bloom * 42;
+                if (!initial) {
+                    this.x = randomGaussian(width * 0.5, width * 0.22);
+                    this.y = randomGaussian(height * 0.54, height * 0.2);
+                    this.x = constrain(this.x, 0, width);
+                    this.y = constrain(this.y, 0, height);
+                    this.px = this.x;
+                    this.py = this.y;
+                }
+            }
+
+            step() {
+                this.px = this.x;
+                this.py = this.y;
+
+                const angle = computeAngle(this.x, this.y);
+                const curl = sin(fieldTime * 2.1 + this.phase + this.y * 0.005) * 0.32;
+                const pulse = 0.72 + sin(frameCount * this.wobble + this.phase) * 0.35;
+                this.x += cos(angle + curl) * this.speed * pulse;
+                this.y += sin(angle - curl * 0.4) * this.speed * pulse;
+                this.life -= 1;
+
+                if (this.x < -30 || this.x > width + 30 || this.y < -30 || this.y > height + 30 || this.life <= 0) {
+                    this.reset();
+                }
+            }
+
+            render() {
+                const t = this.life / this.maxLife;
+                const shade = spectralColor(this.x, this.y, this.life);
+                const alpha = this.opacity * (0.32 + t * 0.9);
+
+                stroke(red(shade), green(shade), blue(shade), alpha);
+                strokeWeight(this.size);
+                line(this.px, this.py, this.x, this.y);
+
+                if (params.bloom > 0.28 && random() < 0.12) {
+                    stroke(red(shade), green(shade), blue(shade), alpha * 0.22);
+                    strokeWeight(this.size * (2.6 + params.bloom * 1.4));
+                    line(this.px, this.py, this.x, this.y);
+                }
+            }
+        }
+
+        function updateParam(paramName, value) {
+            const numericValue = ['density', 'haze'].includes(paramName) ? parseInt(value, 10) : parseFloat(value);
+            params[paramName] = numericValue;
+            document.getElementById(paramName + '-value').textContent = typeof numericValue === 'number' && !Number.isInteger(numericValue)
+                ? numericValue.toFixed(2)
+                : numericValue;
+            initializeSystem(true);
+        }
+
+        function updateColor(colorId, value) {
+            const indexMap = { color1: 0, color2: 1, color3: 2 };
+            params.colorPalette[indexMap[colorId]] = value;
+            document.getElementById(colorId + '-value').textContent = value;
+            initializeSystem(true);
+        }
+
+        function updateSeedDisplay() {
+            document.getElementById('seed-input').value = params.seed;
+        }
+
+        function updateSeed() {
+            let input = document.getElementById('seed-input');
+            let newSeed = parseInt(input.value, 10);
+            if (newSeed && newSeed > 0) {
+                params.seed = newSeed;
+                initializeSystem(true);
+            } else {
+                updateSeedDisplay();
+            }
+        }
+
+        function previousSeed() {
+            params.seed = Math.max(1, params.seed - 1);
+            updateSeedDisplay();
+            initializeSystem(true);
+        }
+
+        function nextSeed() {
+            params.seed = params.seed + 1;
+            updateSeedDisplay();
+            initializeSystem(true);
+        }
+
+        function randomSeedAndUpdate() {
+            params.seed = Math.floor(Math.random() * 999999) + 1;
+            updateSeedDisplay();
+            initializeSystem(true);
+        }
+
+        function regenerateArtwork() {
+            initializeSystem(true);
+        }
+
+        function resetParameters() {
+            params = {
+                ...defaultParams,
+                colorPalette: [...defaultParams.colorPalette]
+            };
+
+            ['density', 'drift', 'bloom', 'haze', 'contrast'].forEach((key) => {
+                document.getElementById(key).value = params[key];
+                document.getElementById(key + '-value').textContent = Number.isInteger(params[key]) ? params[key] : params[key].toFixed(2);
+            });
+
+            document.getElementById('color1').value = params.colorPalette[0];
+            document.getElementById('color1-value').textContent = params.colorPalette[0];
+            document.getElementById('color2').value = params.colorPalette[1];
+            document.getElementById('color2-value').textContent = params.colorPalette[1];
+            document.getElementById('color3').value = params.colorPalette[2];
+            document.getElementById('color3-value').textContent = params.colorPalette[2];
+
+            updateSeedDisplay();
+            initializeSystem(true);
+        }
+
+        function downloadPNG() {
+            saveCanvas('lucent-drift-' + params.seed, 'png');
+        }
+
+        function windowResized() {
+            if (!canvasReady) return;
+            const stage = document.querySelector('.stage');
+            const size = getCanvasSize(stage);
+            resizeCanvas(size.width, size.height);
+            initializeSystem(true);
+        }
+
+        window.addEventListener('load', function() {
+            updateSeedDisplay();
+            ['density', 'drift', 'bloom', 'haze', 'contrast'].forEach((key) => {
+                document.getElementById(key + '-value').textContent = Number.isInteger(params[key]) ? params[key] : params[key].toFixed(2);
+            });
+        });
+    </script>
+</body>
+</html>
