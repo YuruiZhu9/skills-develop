@@ -9,7 +9,6 @@
 ## 导航
 
 - [Skill 索引](#skill-索引)
-- [Showcase](#showcase)
 - [仓库结构](#仓库结构)
 - [如何使用](#如何使用)
 - [如何贡献新 Skill](#如何贡献新-skill)
@@ -26,34 +25,18 @@
 
 ---
 
-## Showcase
-
-以下网页作品均通过组合多个 Skill（`frontend-design`、`algorithmic-art`、`shader-dev`、`canvas-design`）生成，展示了 Skill 组合的实际效果。
-
-### Ephemeral Resonance — 瞬态共鸣
-
-![Ephemeral Resonance](./网页生成.png)
-
-- **文件**：[`ephemeral-resonance.html`](./ephemeral-resonance.html)
-
-### Dreamlike Flow Page
-
-- **文件**：[`dreamlike-flow-page.html`](./dreamlike-flow-page.html)
-
----
-
 ## 仓库结构
 
 ```
 skills-develop/
 ├── README.md                      # 项目介绍与 Skill 索引
-├── ephemeral-resonance.html       # Showcase 网页
-├── dreamlike-flow-page.html       # Showcase 网页
-├── 网页生成.png                    # Showcase 截图
 ├── skill-router/                  # Skill: 显式技能路由器
-│   ├── README.md
+│   ├── README.md                  # 使用说明与示例
 │   ├── SKILL_codex.md
-│   └── SKILL_claudecode.md
+│   ├── SKILL_claudecode.md
+│   ├── ephemeral-resonance.html   # 示例：多 Skill 组合生成的网页
+│   ├── dreamlike-flow-page.html   # 示例：多 Skill 组合生成的网页
+│   └── 网页生成.png                # 示例截图
 └── ...                            # 后续新增 Skill 按文件夹存放
 ```
 

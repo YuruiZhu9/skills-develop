@@ -64,6 +64,22 @@
 
 ---
 
+## 示例输出
+
+以下网页由 `skill-router` 路由组合 `frontend-design`、`algorithmic-art`、`shader-dev`、`canvas-design` 四个 Skill 生成，展示了多 Skill 协作的实际效果。
+
+### Ephemeral Resonance — 瞬态共鸣
+
+![Ephemeral Resonance](./网页生成.png)
+
+- **文件**：[`ephemeral-resonance.html`](./ephemeral-resonance.html)
+
+### Dreamlike Flow Page
+
+- **文件**：[`dreamlike-flow-page.html`](./dreamlike-flow-page.html)
+
+---
+
 ## 安装
 
 ```bash
