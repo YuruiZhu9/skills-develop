@@ -20,6 +20,7 @@
 | Skill | 简介 | 路径 |
 |-------|------|------|
 | skill-router | 显式技能路由器，帮助模型在多个可用 Skill 之间做选择、比较和组合 | [`skill-router/README.md`](./skill-router/README.md) |
+| AutoNote | 长期维护单个 Markdown 笔记文件，将散乱的 Markdown/TXT/纯文本去重、编辑、归档为结构化笔记 | [`AutoNote skill/README.md`](./AutoNote%20skill/README.md) |
 
 > 持续更新中，新 Skill 会追加到本表。
 
@@ -37,6 +38,10 @@ skills-develop/
 │   ├── ephemeral-resonance.html   # 示例：多 Skill 组合生成的网页
 │   ├── dreamlike-flow-page.html   # 示例：多 Skill 组合生成的网页
 │   └── 网页生成.png                # 示例截图
+├── AutoNote skill/                # Skill: 自动笔记整理
+│   ├── claudecode/AutoNote/       # Claude Code 版本
+│   ├── codex/AutoNote/            # Codex 版本
+│   └── ...
 └── ...                            # 后续新增 Skill 按文件夹存放
 ```
 

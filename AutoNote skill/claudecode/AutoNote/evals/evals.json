@@ -1,0 +1,61 @@
+{
+  "skill_name": "AutoNote",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "请把下面这段很乱的学习记录整理进当前目录的 Technotes.md。不要原样堆进去，要压缩、总结、改写并归类到合适位置：\\n\\n今天看 Python 装饰器，其实翻了很多例子，很多都在重复说它能包装函数、做日志和计时。语法就是那个 @。我自己觉得最容易忘的是执行顺序，多个装饰器叠加时经常会搞混。还有 wraps 这个东西，好像是为了保留原函数名字和 docstring。前面我还抄了几段差不多的话，就不用都记了，留核心就行。",
+      "expected_output": "将内容压缩为高密度笔记，归入类似 `技术/Python/装饰器` 的路径，提炼 Summary、Key Points，并突出执行顺序与 wraps。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "请读取随任务提供的 `Technotes_existing_decorator.md`，把它当作当前需要维护的目标文件。然后把这段补充材料直接并入同一个主题，不要新建重复章节：\\n\\n补充一下，装饰器本质上通常会返回一个新的包装函数。很多初学者会把“定义顺序”和“调用表现”混在一起。实际写的时候最好配合 functools.wraps，不然函数名和注释会丢。前面如果有说得散或者重复的地方，你可以直接合并重写。",
+      "expected_output": "复用已有路径，直接 merge 原有块内内容，补充包装函数和 wraps，并避免重复新增主题。",
+      "files": [
+        "evals/fixtures/Technotes_existing_decorator.md"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "请把这段混杂的项目讨论整理到 `C:\\\\Users\\\\yrzhu\\\\Documents\\\\TeamNotes.md`。原文很啰嗦，你需要自己分析、压缩、润色并把弱信息降级处理：\\n\\nAutoNote 这个东西，我们大概是想让它以后长期都往同一个 note 里面写，不是那种每次生成一份新文档。然后分类最好不要太死板，因为后面可能会变，但是也不能今天一个类明天一个类。还有一个重点是，如果新内容比旧内容更完整，就别一股脑追加了，直接改旧段落，不然最后会越来越乱。我们讨论中还反复说了一堆“要不以后再看”“先这样”“回头补充”之类的话，这些可以不要。",
+      "expected_output": "将混杂的讨论整理为更稳定的项目笔记路径，删除口水话，保留单文件维护、动态分类、强合并替换等核心决策，并写入指定目标文件。",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "请读取随任务提供的 `noisy_decorator_notes.txt`，把内容整理进当前目录的 Technotes.md。要求你压缩冗余内容、自动归类、提炼重点，并在适合时直接 merge 而不是盲目 append。",
+      "expected_output": "能够处理 `.txt` 文件输入，把低密度学习记录整理成结构化的受管块。",
+      "files": [
+        "evals/fixtures/noisy_decorator_notes.txt"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "请读取随任务提供的 `autonote_mixed_meeting.md`，把内容整理为项目笔记。要求：动态分类，但同一主题别越写越散；保留核心决策，去掉讨论废话；同义主题如 `merge policy` 和 `合并策略` 要尽量归一。",
+      "expected_output": "能够处理 `.md` 文件输入，压缩讨论噪音，并把同义主题归到稳定路径。",
+      "files": [
+        "evals/fixtures/autonote_mixed_meeting.md"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "请读取随任务提供的 `Technotes_noop.md`，把它当作当前需要维护的目标文件。然后处理这段输入：\\n\\n装饰器用于扩展函数行为而不直接修改函数主体。常见用途包括日志、计时、缓存。需要保留原函数元信息时，可考虑 functools.wraps。\\n\\n如果你判断这段内容与现有块表达等价，就不要制造无意义更新。",
+      "expected_output": "检测到等价内容时应走 `no_op`，不要刷新 `_Last Updated_`，也不要追加新的 `更新记录`。",
+      "files": [
+        "evals/fixtures/Technotes_noop.md"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "当前正在维护的笔记里已经有 `技术/Python/装饰器` 这个主题。现在我补充一句：Decorator 在 Python 里本质上还是包装函数的模式。请把它并回原主题，不要因为用了英文词就新建一个 `Decorator` 小节。",
+      "expected_output": "把 `Decorator` 归一到已有 `装饰器` 主题，而不是创建同义重复路径。",
+      "files": []
+    },
+    {
+      "id": 8,
+      "prompt": "请把下面这段输入整理进当前目录的 Technotes.md，但不要硬塞进一个块里：\\n\\n今天同时看了 Python 装饰器和闭包。装饰器这边主要记住 @ 语法、包装函数、wraps。闭包这边主要是内部函数引用外部变量，离开定义环境后也还能保留那个变量。两者相关但不是一回事，最好别混在一起。",
+      "expected_output": "对混杂输入进行 split，至少拆成两个不同主题的受管块，而不是错误地合并为一个主题。",
+      "files": []
+    }
+  ]
+}
